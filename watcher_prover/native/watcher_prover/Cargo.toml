@@ -11,8 +11,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rustler = "0.29.1"
-lambdaworks-stark = { git = "https://github.com/lambdaclass/lambdaworks_cairo_prover.git", branch = "wasm_bindgen" }
-lambdaworks-math = { git = "https://github.com/lambdaclass/lambdaworks", rev = "9d3cde6", features = [
-    "lambdaworks-serde",
-] }
+stark-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks_stark_platinum.git", rev = "3626a49101cf18c4743c47f41fdaa31fa0191ab2" }
+cairo-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks_stark_platinum.git", rev = "3626a49101cf18c4743c47f41fdaa31fa0191ab2" }
+lambdaworks-math = { git = "https://github.com/lambdaclass/lambdaworks", rev = "af0a479"}
 serde_cbor = "0.11.1"

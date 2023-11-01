@@ -48,8 +48,6 @@ impl<Handler: MessageHandler> Receiver<Handler> {
         let listener = TcpListener::bind(&self.address)
             .await
             .expect("Failed to bind TCP port");
-
-        debug!("Listening on {}", self.address);
         loop {
             let (socket, peer) = match listener.accept().await {
                 Ok(value) => value,
@@ -58,7 +56,7 @@ impl<Handler: MessageHandler> Receiver<Handler> {
                     continue;
                 }
             };
-            info!("Incoming connection established with {}", peer);
+            warn!("Incoming connection established with {}", peer);
             Self::spawn_runner(socket, peer, self.handler.clone()).await;
         }
     }

@@ -140,10 +140,11 @@ impl Connection {
     async fn run(&mut self) {
         let mut delay = self.retry_delay;
         let mut retry = 0;
+		warn!("connection: {}", self.address);
         loop {
             match TcpStream::connect(self.address).await {
                 Ok(stream) => {
-                    info!("Outgoing connection established with {}", self.address);
+                    warn!("Outgoing connection established with {}", self.address);
 
                     // Reset the delay.
                     delay = self.retry_delay;

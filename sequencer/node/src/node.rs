@@ -318,7 +318,7 @@ impl Node {
             if !transactions.is_empty()
                 || (block.round - self.last_committed_round) > ROUND_TIMEOUT_FOR_EMPTY_BLOCKS
             {
-                info!("About to store block from round {}", block.round);
+                warn!("About to store block from round {}", block.round);
                 self.last_committed_round = block.round;
                 self.create_and_store_new_block(transactions);
             }

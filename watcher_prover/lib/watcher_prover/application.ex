@@ -5,6 +5,7 @@ defmodule WatcherProver.Application do
 
   use Application
 
+  @db_data_dir "./blocks/db"
   @impl true
   def start(_type, _args) do
     children = [
@@ -20,7 +21,8 @@ defmodule WatcherProver.Application do
       WatcherProverWeb.Endpoint,
       # Start a worker by calling: WatcherProver.Worker.start_link(arg)
       # {WatcherProver.Worker, arg}
-      WatcherProver.Poller
+      WatcherProver.Poller,
+      {CubDB, [data_dir: @db_data_dir, name: CubDB]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

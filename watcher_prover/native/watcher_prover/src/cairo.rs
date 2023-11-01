@@ -1,13 +1,11 @@
+use cairo_platinum_prover::{
+    air::{generate_cairo_proof, verify_cairo_proof, PublicInputs},
+    cairo_layout::CairoLayout,
+    runner::run::generate_prover_args,
+};
 use lambdaworks_math::field::fields::fft_friendly::stark_252_prime_field::Stark252PrimeField;
-use lambdaworks_math::traits::Deserializable;
-use lambdaworks_stark::cairo::air::generate_cairo_proof;
-use lambdaworks_stark::cairo::air::verify_cairo_proof;
-use lambdaworks_stark::cairo::air::{CairoAIR, PublicInputs};
-use lambdaworks_stark::cairo::runner::run::{generate_prover_args, CairoVersion};
-use lambdaworks_stark::starks::proof::options::ProofOptions;
-use lambdaworks_stark::starks::proof::stark::StarkProof;
-use lambdaworks_stark::starks::{fri::FieldElement, prover::prove, traits::AIR, verifier::verify};
 use rustler::Binary;
+use stark_platinum_prover::proof::{options::ProofOptions, stark::StarkProof};
 
 #[rustler::nif]
 /// Loads the program in path, runs it with the Cairo VM, and makes a proof of it
@@ -26,7 +24,7 @@ pub fn run_program_and_get_proof_internal(program_content: &[u8]) -> (Vec<u8>, V
     let proof_options = ProofOptions::default_test_options();
 
     let (main_trace, pub_inputs) =
-        generate_prover_args(program_content, &CairoVersion::V1, &None).unwrap();
+        generate_prover_args(program_content, &None, CairoLayout::Plain).unwrap();
 
     let proof = generate_cairo_proof(&main_trace, &pub_inputs, &proof_options).unwrap();
 
@@ -51,7 +49,7 @@ pub fn verify_internal(proof_bytes: &[u8], public_inputs_bytes: &[u8]) -> bool {
 mod test {
     #[test]
     fn test_run_program_and_get_proof() {
-        let program_content = std::fs::read("../../programs/fibonacci_cairo1.casm").unwrap();
+        let program_content = std::fs::read("../../programs/cairo0.json").unwrap();
         let (proof_bytes, public_inputs_bytes) =
             super::run_program_and_get_proof_internal(&program_content);
         println!("proof_bytes len: {}", proof_bytes.len());

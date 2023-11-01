@@ -162,6 +162,8 @@ impl fmt::Debug for Vote {
     }
 }
 
+// Quorum certificate : Quorum Certificate is a cryptographic proof that a sufficient number of nodes in a distributed network have agreed on a particular set of transactions or a specific state transition.
+
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct QC {
     pub hash: Digest,

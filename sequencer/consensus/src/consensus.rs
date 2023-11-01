@@ -39,7 +39,6 @@ pub enum ConsensusMessage {
 }
 
 pub struct Consensus;
-
 impl Consensus {
     #[allow(clippy::too_many_arguments)]
     pub fn spawn(

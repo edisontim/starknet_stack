@@ -57,7 +57,8 @@ defmodule WatcherProver.MixProject do
       {:poison, "~> 3.1"},
       {:hackney, "~> 1.6"},
       {:sweet_xml, "~> 0.7.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:cubdb, "~> 2.0"}
     ]
   end
 

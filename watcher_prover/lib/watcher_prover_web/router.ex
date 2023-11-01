@@ -20,6 +20,14 @@ defmodule WatcherProverWeb.Router do
     get("/", PageController, :home)
   end
 
+  scope "/get_current_inscription_id", WatcherProverWeb do
+    get("/", PageController, :get_current_inscription_id)
+  end
+
+  scope "/get_inscription_id_by_block_hash/:block_hash", WatcherProverWeb do
+    get("/", PageController, :get_inscription_id_by_block_hash)
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", WatcherProverWeb do
   #   pipe_through :api

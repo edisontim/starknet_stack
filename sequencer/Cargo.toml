@@ -9,5 +9,6 @@ members = [
     "node",
     "sequencer",
     "types",
+    "verifier",
 ]
 resolver = "2"

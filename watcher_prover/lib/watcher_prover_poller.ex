@@ -9,7 +9,7 @@ defmodule WatcherProver.Poller do
   require Logger
   alias WatcherProver.S3
 
-  @polling_frequency_ms 5_000
+  @polling_frequency_ms 15_000
   @number_of_blocks_for_confirmation 0
 
   def start_link(args) do
@@ -20,11 +20,13 @@ defmodule WatcherProver.Poller do
   def init(_opts) do
     state = %{
       last_confirmed_block_number: 1,
+      prev_inscription_id: "0000000000000000000000000000000000000000000000000000000000000000i0",
       highest_block: 0
     }
 
-    Process.send_after(self(), :poll, @polling_frequency_ms)
-    :ok = File.mkdir_p("./proofs")
+    Process.send_after(self(), :poll, 10)
+
+    :ok = File.mkdir_p("./blocks")
 
     {:ok, state}
   end
@@ -37,66 +39,93 @@ defmodule WatcherProver.Poller do
   def handle_info(
         :poll,
         state = %{
-          last_confirmed_block_number: last_confirmed_block_number
+          last_confirmed_block_number: last_confirmed_block_number,
+          prev_inscription_id: prev_inscription_id
         }
       ) do
+    # {:ok, current_block_height} = Rpc.last_block_number()
+
+    # Logger.info("Previous inscription id #{prev_inscription_id}")
+
     Process.send_after(self(), :poll, @polling_frequency_ms)
-    {:ok, current_block_height} = Rpc.last_block_number()
 
-    if last_confirmed_block_number + @number_of_blocks_for_confirmation <= current_block_height do
-      {:ok, block} = Rpc.get_block_by_number(last_confirmed_block_number)
+    # posting_res = inscribe_file("./blocks/test-block.txt", 10)
 
-      Logger.info(
-        "Running proof for block #{block["block_hash"]} with contents #{inspect(block)}"
-      )
+    # If the process exited correctly
+    # prev_inscription_id =
+    #   if elem(posting_res, 1) == 0 do
+    #     Poison.decode!(elem(posting_res, 0))["inscription"]
+    #   else
+    #     prev_inscription_id
+    #   end
 
-      # TODO: fetch executions from the invoke transactions for this block to prove
-      {:ok, program} = File.read("./programs/fibonacci_cairo1.casm")
+    # Logger.info("Return of program: #{prev_inscription_id}")
+    # File.write("./blocks/current_inscription_id", prev_inscription_id, [:write])
+    CubDB.put(CubDB, "tests", "lol")
 
-      {proof, public_inputs} = run_proofs(program)
+    {:noreply,
+     %{
+       state
+       | last_confirmed_block_number: 1,
+         prev_inscription_id: prev_inscription_id
+     }}
 
-      Logger.info("Generated block proof #{inspect(proof)}")
+    # if last_confirmed_block_number + @number_of_blocks_for_confirmation <= current_block_height do
+    #   {:ok, block} = Rpc.get_block_by_number(last_confirmed_block_number)
 
-      block_hash = block["block_hash"]
-      prover_storage = Application.get_env(:watcher_prover, :prover_storage)
+    # Logger.info("Running proof for block #{block["block_hash"]} with contents #{inspect(block)}")
 
-      case prover_storage do
-        "s3" ->
-          :ok = S3.upload_object!(:erlang.list_to_binary(proof), "#{block["block_hash"]}-proof")
+    # TODO: fetch executions from the invoke transactions for this block to prove
+    # {:ok, program} = File.read("./programs/cairo0.json")
 
-          :ok =
-            S3.upload_object!(
-              :erlang.list_to_binary(public_inputs),
-              "#{block["block_hash"]}-public_inputs"
-            )
+    # {proof, public_inputs} = run_proofs(program)
 
-          Logger.info("Uploaded proof of block with id #{block_hash}")
+    # Logger.info("Generated block proof #{inspect(proof)}")
 
-        _ ->
-          file_path = "./proofs/#{block_hash}-proof"
-          inputs_path = "./proofs/#{block_hash}-public_inputs"
+    # block_hash = block["block_hash"]
 
-          :ok = File.write(file_path, proof, [:write])
-          :ok = File.write(inputs_path, public_inputs, [:write])
+    # Can't concat variables as this changes the final bytes written to file, not sure why
+    # file_path = "./blocks/#{block_hash}-block.txt"
 
-          Logger.info("Saved block with id #{block_hash} to file ./proofs/#{block_hash}-proof")
-      end
+    # :ok = File.write(file_path, prev_inscription_id, [:write])
+    # :ok = File.write(file_path, public_inputs, [:append])
+    # :ok = File.write(file_path, "public_inputs_end", [:append])
+    # :ok = File.write(file_path, proof, [:append])
 
-      {:noreply,
-       %{
-         state
-         | last_confirmed_block_number: last_confirmed_block_number + 1
-       }}
-    else
-      {:noreply,
-       %{
-         state
-         | last_confirmed_block_number: last_confirmed_block_number
-       }}
-    end
+    #   Logger.info("Saved block with id #{block_hash} to file #{file_path}")
+
+    #   {:noreply,
+    #    %{
+    #      state
+    #      | last_confirmed_block_number: last_confirmed_block_number + 1
+    #    }}
+    # else
+    #   {:noreply,
+    #    %{
+    #      state
+    #      | last_confirmed_block_number: last_confirmed_block_number
+    #    }}
+    # end
   end
 
   def run_proofs(block) do
     NIF.run_program_and_get_proof(block)
+  end
+
+  def inscribe_file(block_path, fee_rate) do
+    System.cmd("ord", [
+      "--regtest",
+      "--rpc-url",
+      "localhost:18332",
+      "--bitcoin-rpc-user",
+      "tim",
+      "--bitcoin-rpc-pass",
+      "tim",
+      "wallet",
+      "inscribe",
+      "--fee-rate",
+      Integer.to_string(fee_rate),
+      block_path
+    ])
   end
 end
